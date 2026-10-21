@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101719"><title>AI Music Studio V3.0</title>
+<style>
+:root{color-scheme:dark;--bg:#101719;--panel:#192326;--panel2:#202e31;--line:#304145;--text:#f0f6f4;--muted:#a5b7b5;--mint:#72e0c0;--gold:#e8c77b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#101719,#132321 65%,#101719);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif;line-height:1.5}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:var(--panel2);color:var(--text)}button.primary{background:var(--mint);color:#08221b;border:0;font-weight:800}button:disabled{opacity:.45;cursor:not-allowed}
+header{padding:20px 16px 14px;max-width:980px;margin:auto}h1{font-size:clamp(23px,5vw,34px);margin:0 0 5px}header p{margin:0;color:var(--muted);font-size:14px}.tag{display:inline-block;color:#08221b;background:var(--mint);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;margin-bottom:9px}
+main{max-width:980px;margin:auto;padding:0 12px 36px;display:grid;gap:13px}.card{background:rgba(25,35,38,.96);border:1px solid var(--line);border-radius:18px;padding:15px;min-width:0}.card h2{font-size:17px;margin:0 0 12px}.sub{color:var(--muted);font-size:12px}.upload{border:1px dashed #63867d;border-radius:14px;padding:17px;text-align:center;background:#14211f}.upload input{display:block;width:100%;margin:12px 0}.fileline{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.audio{width:100%;margin-top:12px}.status{margin-top:12px;color:var(--mint);font-size:13px;min-height:22px;font-weight:bold}.progress{height:6px;background:#2b3c3e;border-radius:999px;overflow:hidden;margin-top:7px}.progress span{display:block;height:100%;width:0;background:var(--mint)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{background:var(--panel2);border-radius:13px;padding:12px;min-width:0}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:clamp(20px,5vw,27px);font-weight:800;overflow-wrap:anywhere}.metric .hint{font-size:11px;color:var(--muted)}
+.fieldgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}.field input,.field select,.field textarea{width:100%;background:#10191b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--text);min-width:0}.field textarea{min-height:110px;resize:vertical}
+.sectionCard{border:1px solid var(--line);border-radius:13px;padding:12px;margin-top:9px;background:#152021}.sectionTop{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.sectionName{font-weight:800}.smallbtn{padding:7px 9px;font-size:12px}.chordBox{background:#10191b;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:monospace;font-size:14px;color:var(--mint);margin-top:8px;overflow-x:auto}.footer{color:var(--muted);font-size:11px;text-align:center;padding:4px 12px 22px}
+@media(min-width:720px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.fieldgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:380px){.fieldgrid{grid-template-columns:1fr}.card{padding:12px}}
+
+.lyricsHelp{font-size:12px;color:var(--muted);margin:4px 0 10px}
+.lyricLine{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.7fr);gap:8px;align-items:start;padding:10px;border-bottom:1px solid var(--line)}
+.lyricLine:last-child{border-bottom:0}
+.lyricChord{color:var(--mint);font-weight:800;font-family:ui-monospace,monospace;font-size:15px;overflow-wrap:anywhere}
+.lyricText{white-space:pre-wrap;overflow-wrap:anywhere}
+.lyricEditGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.7fr);gap:8px;margin-top:8px}
+.lyricEditGrid input,.lyricEditGrid textarea{width:100%;background:#10191b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--text);min-width:0}
+.lyricEditGrid textarea{min-height:58px;resize:vertical}
+@media(max-width:380px){.lyricLine,.lyricEditGrid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">V3.0 · AI MUSIC STUDIO</span>
+  <h1>🎵 AI Music Studio</h1>
+  <p>သီချင်းဖိုင်ထည့်ပါ။ Lyrics နှင့် Chords တွဲကြည့်ပါ။ Vocal လျှော့ချမှုသည် အခြေခံစမ်းသပ်နည်းဖြစ်ပြီး AI separation မဟုတ်ပါ။</p>
+</header>
+<main>
+<section class="card wide">
+  <h2>၁။ သီချင်းဖိုင် ထည့်ရန် & Pitch / Vocal ချိန်ညှိခြင်း</h2>
+  <div class="upload">
+    <div style="font-size:32px">🎧</div>
+    <strong>MP3 / WAV / M4A / OGG / FLAC</strong>
+    <div class="sub">ဖုန်းထဲက သီချင်းဖိုင်ကို ရွေးပါ</div>
+    <input id="audioFile" type="file" accept="audio/*">
+    <div id="fileName" class="fileline">ဖိုင်မရွေးရသေးပါ</div>
+  </div>
+  <audio id="player" class="audio" controls style="display:none"></audio>
+  
+  <div class="fieldgrid" style="margin-top:15px; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+    <div class="field">
+      <label>Key / Pitch Shift (Sharp ♯ / Flat ♭)</label>
+      <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
+        <button id="flatBtn" class="smallbtn" style="background:#2b2315; color:#e8c77b; font-weight:bold;">♭ Flat (-)</button>
+        <span id="pitchDisplay" style="font-weight:bold; font-size:15px; min-width:50px; text-align:center;">0 st</span>
+        <button id="sharpBtn" class="smallbtn" style="background:#152b27; color:#72e0c0; font-weight:bold;">♯ Sharp (+)</button>
+        <button id="resetPitch" style="font-size:11px; padding:6px 8px;">မူလ</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>အဆိုတော်အသံ ဖျောက်ရန် (Vocal Remover)</label>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text);">
+          <input id="vocalRemoveCheck" type="checkbox" style="width:18px; height:18px; accent-color:var(--mint);">
+          <span>Vocal လျှော့ချမည် (Karaoke · အခြေခံနည်း)</span>
+        </label>
+      </div>
+      <div class="sub" style="margin-top:6px">မှတ်ချက်: ဒီ browser-only နည်းက stereo အလယ်သံကို လျှော့ချခြင်းသာ ဖြစ်ပြီး အဆိုသံကို အပြည့်အဝ မဖယ်ရှားနိုင်ပါ။ AI vocal separation ချိတ်ဆက်ထားခြင်း မရှိပါ။</div>
+    </div>
+  </div>
+
+  <div class="controls" style="margin-top:12px">
+    <button id="analyze" class="primary" disabled>အသံကို ခွဲခြမ်းစိတ်ဖြာမယ်</button>
+    <button id="exportAudio" class="primary" disabled>💾 ပြင်ဆင်ထားသော Audio Download</button>
+    <button id="reset">ပြန်စမယ်</button>
+    <button id="export" disabled>ရလဒ် JSON သိမ်းမယ်</button>
+  </div>
+  <div id="status" class="status">သီချင်းဖိုင်တစ်ခု ရွေးပါ။</div>
+  <div class="progress"><span id="progress"></span></div>
+</section>
+
+<section class="card">
+  <h2>၂။ အလိုအလျောက် ရလဒ်</h2>
+  <div class="grid">
+    <div class="metric"><div class="label">Tempo / BPM</div><div id="bpm" class="value">—</div><div id="bpmHint" class="hint">မစစ်ရသေးပါ</div></div>
+    <div class="metric"><div class="label">Key / Scale</div><div id="key" class="value">—</div><div class="hint">Transpose ပြီးသား Key</div></div>
+    <div class="metric"><div class="label">Time Signature</div><div id="meterResult" class="value">4/4</div><div class="hint">ကိုယ်တိုင်ရွေးနိုင်သည်</div></div>
+    <div class="metric"><div class="label">Duration</div><div id="duration" class="value">—</div><div class="hint">သီချင်းအရှည်</div></div>
+    <div class="metric"><div class="label">Estimated Bars</div><div id="bars" class="value">—</div><div class="hint">ခန့်မှန်းအရေအတွက်</div></div>
+    <div class="metric"><div class="label">Style / Genre</div><div id="style" class="value" style="font-size:18px">—</div><div class="hint">Tempo အခြေခံ</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>၃။ Beat နဲ့ Bar ချိန်ညှိမှု</h2>
+  <div class="fieldgrid">
+    <label class="field">Time Signature<select id="meter"><option value="4">4/4</option><option value="3">3/4</option><option value="6">6/8</option><option value="2">2/4</option></select></label>
+    <label class="field">BPM ကို ကိုယ်တိုင်ပြင်ရန်<input id="manualBpm" type="number" min="30" max="260" placeholder="ဥပမာ 96"></label>
+  </div>
+  <div class="controls"><button id="applyBpm">BPM ပြင်ဆင်မယ်</button></div>
+  <div id="beatInfo" class="sub" style="margin-top:10px">Beat grid မရသေးပါ။</div>
+  <div class="fieldgrid" style="margin-top:14px">
+    <label class="field">သီချင်းအမည်<input id="songTitle" type="text" placeholder="သီချင်းအမည်"></label>
+    <label class="field">တေးရေး<input id="songWriter" type="text" placeholder="တေးရေးအမည်"></label>
+    <label class="field">တေးဆို<input id="songSinger" type="text" placeholder="တေးဆိုအမည်"></label>
+  </div>
+</section>
+
+<section class="card wide">
+  <h2>🎛️ အပိုင်းအလိုက် Chords နှင့် Bar များ (Bar-by-Bar Chords)</h2>
+  <div id="barChordsContainer"><p class="sub">သီချင်း Analysis လုပ်ပြီးပါက ဤနေရာတွင် ပေါ်လာမည်။</p></div>
+</section>
+
+<section class="card wide">
+  <h2>၄။ သီချင်းတစ်ပုဒ်လုံး — အပိုင်းအလိုက် Chord Progression</h2>
+  <div class="fieldgrid">
+    <label class="field">အပိုင်းအမည်<select id="sectionType"><option>Intro</option><option>Verse 1</option><option>Pre-Chorus</option><option>Chorus</option><option>Verse 2</option><option>Bridge</option><option>Solo</option><option>Ending</option></select></label>
+    <label class="field">စတင်ချိန် (စက္ကန့်)<input id="sectionStart" type="number" min="0" step=".1" placeholder="0"></label>
+    <label class="field">ပြီးဆုံးချိန် (စက္ကန့်)<input id="sectionEnd" type="number" min="0" step=".1" placeholder="20"></label>
+  </div>
+  <div class="controls"><button id="addSection" class="primary">အပိုင်းထည့်မယ်</button><button id="autoSections">အကြမ်းဖျင်းခွဲမယ်</button><button id="clearSections">အပိုင်းအားလုံးဖျက်မယ်</button></div>
+  <div id="sectionList"><p class="sub">အပိုင်းများ မထည့်ရသေးပါ။</p></div>
+</section>
+
+<section class="card wide">
+  <h2>၅။ သီချင်းစာသား (Lyrics) နှင့် Chords တွဲဖော်ပြရန်</h2>
+  <p class="lyricsHelp">စာသားကို တစ်ကြောင်းစီ ထည့်ပါ။ သက်ဆိုင်ရာ Chord ကို ညာဘက် box တွင် ထည့်နိုင်ပြီး အောက်တွင် Chord ကို စာသားအပေါ်ဘက်၌ ဖော်ပြပေးမည်။ ဥပမာ C, G, Am, F။</p>
+  <label class="field">သီချင်းစာသား ထည့်ရန်
+    <textarea id="lyricsInput" placeholder="ဥပမာ:
+မင်းကို ချစ်တဲ့ အကြောင်း
+နှလုံးသားက ပြောနေတယ်
+အမှတ်တရ နေ့ရက်တွေ
+အမြဲတမ်း သတိရတယ်"></textarea>
+  </label>
+  <div class="controls">
+    <button id="buildLyrics" class="primary">စာသားအလိုက် Chord Box ပြုလုပ်မယ်</button>
+    <button id="clearLyrics">စာသားဖျက်မယ်</button>
+    <button id="exportLyrics">Lyrics + Chords သိမ်းမယ် (.txt)</button>
+  </div>
+  <div id="lyricsChordEditor" style="margin-top:12px"></div>
+  <h3 style="font-size:15px;margin:18px 0 8px">စာသားနှင့် Chords အကြိုကြည့်ရန်</h3>
+  <div id="lyricsChordPreview" class="sectionCard"><p class="sub">စာသားထည့်ပြီး “စာသားအလိုက် Chord Box ပြုလုပ်မယ်” ကို နှိပ်ပါ။</p></div>
+</section>
+
+</main>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+let file=null,lastResult=null,audioUrl=null,audioBuffer=null,sections=[];
+let currentPitch=0; 
+let removeVocal = false;
+
+const names=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'],
+      flatToSharp={'D♭':'C♯','E♭':'D♯','G♭':'F♯','A♭':'G♯','B♭':'A♯','Db':'C♯','Eb':'D♯','Gb':'F♯','Ab':'G♯','Bb':'A♯'},
+      keyOptions=['Unknown',...names.map(n=>n+' major'),...names.map(n=>n+' minor')],
+      major=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88],
+      minor=[6.33,2.68,3.52,5.38,2.6,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+
+function status(s,p){
+  let st = $('status'); if(st) st.textContent = s;
+  let pr = $('progress'); if(pr && p !== undefined) pr.style.width = Math.max(0, Math.min(100, p)) + '%';
+}
+
+function fmt(s){return isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'—'}
+function corr(a,b){let ma=a.reduce((x,y)=>x+y,0)/a.length,mb=b.reduce((x,y)=>x+y,0)/b.length,n=0,d=0,e=0;for(let i=0;i<a.length;i++){let x=a[i]-ma,y=b[i]-mb;n+=x*y;d+=x*x;e+=y*y}return n/Math.sqrt(d*e||1)}
+function rotate(a,r){return a.map((_,i)=>a[(i-r+12)%12])}
+
+function transposeNote(note, semitones) {
+  let n = flatToSharp[note] || note;
+  let idx = names.indexOf(n);
+  if (idx === -1) return note;
+  let newIdx = (idx + semitones + 1200) % 12;
+  return names[newIdx];
+}
+
+function transposeKey(keyStr, semitones) {
+  if (!keyStr || keyStr === 'Unknown') return keyStr;
+  let parts = keyStr.split(' ');
+  let root = parts[0];
+  let quality = parts.slice(1).join(' ');
+  let newRoot = transposeNote(root, semitones);
+  return newRoot + (quality ? ' ' + quality : '');
+}
+
+function transposeChord(chord, semitones) {
+  if (!chord) return '';
+  return chord.replace(/([A-G][♯♭#b]?)(.*)/, (match, root, suffix) => {
+    let cleanRoot = root.replace('b','♭').replace('#','♯');
+    let n = transposeNote(cleanRoot, semitones);
+    return n + suffix;
+  });
+}
+
+$('audioFile').addEventListener('change', async e => {
+  let files = e.target.files;
+  if(!files || !files[0]) return;
+  file = files[0];
+  $('fileName').textContent = file.name + ' · ' + (file.size ? (file.size / 1048576).toFixed(2) : '0') + ' MB';
+  
+  audioBuffer = null;
+  lastResult = null;
+  
+  $('analyze').disabled = false;
+  $('exportAudio').disabled = false;
+  
+  await updateAudioPreview();
+  status('ဖိုင်ရွေးပြီးပါပြီ။ "အသံကို ခွဲခြမ်းစိတ်ဖြာမယ်" ကို နှိပ်နိုင်ပါပြီ။', 0);
+});
+
+$('sharpBtn').onclick = () => { if(currentPitch < 12) { currentPitch++; updatePitchAndPreview(); } };
+$('flatBtn').onclick = () => { if(currentPitch > -12) { currentPitch--; updatePitchAndPreview(); } };
+$('resetPitch').onclick = () => { currentPitch = 0; updatePitchAndPreview(); };
+
+$('vocalRemoveCheck').onchange = (e) => {
+  removeVocal = e.target.checked;
+  updatePitchAndPreview();
+};
+
+function updatePitchAndPreview() {
+  let noteText = currentPitch === 0 ? '0 st (မူလ)' : (currentPitch > 0 ? `♯ +${currentPitch} st` : `♭ ${currentPitch} st`);
+  $('pitchDisplay').textContent = noteText;
+  
+  if(lastResult && lastResult.rawKey) {
+    $('key').textContent = transposeKey(lastResult.rawKey, currentPitch);
+  }
+  renderBarChords();
+  if (typeof renderLyricsChordPreview === 'function') renderLyricsChordPreview();
+  if(file) updateAudioPreview();
+}
+
+async function getProcessedAudioBuffer() {
+  if (!file) throw Error('သီချင်းဖိုင် မရှိပါ။');
+  let C = window.AudioContext || window.webkitAudioContext;
+  if (!C) throw Error('Web Audio API မရနိုင်ပါ။');
+  let ctx = new C();
+  if (ctx.state === 'suspended') await ctx.resume();
+
+  let arrayBuf = await file.arrayBuffer();
+  let originalBuffer = await ctx.decodeAudioData(arrayBuf);
+  ctx.close();
+
+  let numChannels = originalBuffer.numberOfChannels;
+  let sampleRate = originalBuffer.sampleRate;
+  let length = originalBuffer.length;
+
+  let left = numChannels > 0 ? originalBuffer.getChannelData(0) : null;
+  let right = numChannels > 1 ? originalBuffer.getChannelData(1) : left;
+
+  let procLeft = new Float32Array(length);
+  let procRight = new Float32Array(length);
+
+  for (let i = 0; i < length; i++) {
+    let l = left[i];
+    let r = right[i];
+    if (removeVocal && numChannels >= 2) {
+      let center = (l + r) * 0.5;
+      procLeft[i] = l - center * 0.8;
+      procRight[i] = r - center * 0.8;
+    } else {
+      procLeft[i] = l;
+      procRight[i] = r;
+    }
+  }
+
+  let tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+  let processedBuf = tempCtx.createBuffer(numChannels, length, sampleRate);
+  processedBuf.copyToChannel(procLeft, 0);
+  if (numChannels > 1) processedBuf.copyToChannel(procRight, 1);
+  tempCtx.close();
+  return processedBuf;
+}
+
+
+// High-quality pitch shifting via SoundTouchJS AudioWorklet.
+// Real audio pitch shifting with SoundTouchJS; playbackRate remains 1 to preserve tempo and duration.
+async function pitchShiftBuffer(inputBuffer, semitones) {
+  if (!semitones) return inputBuffer;
+  if (!window.isSecureContext && location.protocol !== 'file:') {
+    throw new Error('အသံ Key ကိုပြောင်းရန် HTTPS website မှဖွင့်ပြီး Internet ချိတ်ထားပါ။');
+  }
+  try {
+    const { processOffline } = await import('https://esm.sh/@soundtouchjs/audio-worklet@2.1.1?bundle');
+    const rendered = await processOffline({
+      input: inputBuffer,
+      processorUrl: 'https://cdn.jsdelivr.net/npm/@soundtouchjs/audio-worklet@2.1.1/processor',
+      pitchSemitones: semitones,
+      playbackRate: 1,
+      stretchParameters: { overlapMs: 12, quickSeek: false }
+    });
+    // Keep exact original sample count in case a browser/library build rounds by one frame.
+    if (rendered.length === inputBuffer.length) return rendered;
+    const C = window.AudioContext || window.webkitAudioContext;
+    const ctx = new C();
+    const fixed = ctx.createBuffer(inputBuffer.numberOfChannels, inputBuffer.length, inputBuffer.sampleRate);
+    for (let ch = 0; ch < inputBuffer.numberOfChannels; ch++) {
+      const from = rendered.getChannelData(Math.min(ch, rendered.numberOfChannels - 1));
+      fixed.getChannelData(ch).set(from.subarray(0, Math.min(from.length, fixed.length)));
+    }
+    await ctx.close();
+    return fixed;
+  } catch (err) {
+    console.error('Pitch shift failed:', err);
+    throw new Error('Audio Engine ချိတ်ဆက်မှု မအောင်မြင်ပါ။ Internet/HTTPS ကိုစစ်ပါ။ အသေးစိတ်: ' + (err && err.message ? err.message : String(err)) + ' — မူရင်းအသံကို မပြောင်းထားပါ။');
+  }
+}
+
+async function updateAudioPreview() {
+  if(!file) return;
+  status('အသံဖိုင် ပြင်ဆင်နေသည်...', 30);
+  try {
+    let buf = await getProcessedAudioBuffer();
+    // Pitch shift without changing the audio duration / tempo.
+    let renderedBuffer = await pitchShiftBuffer(buf, currentPitch);
+    let wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
+    
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    audioUrl = URL.createObjectURL(wavBlob);
+    
+    let player = $('player');
+    player.src = audioUrl;
+    player.style.display = 'block';
+    
+    status('✅ Audio Key ပြောင်းပြီးပါပြီ။ Tempo/BPM မပြောင်းစေရန် ပြုလုပ်ထားသည်။ Play နှိပ်ပြီး စမ်းပါ။', 100);
+  } catch (err) {
+    status('❌ Preview Error: ' + err.message, 0);
+  }
+}
+
+$('exportAudio').onclick = async () => {
+  if(!file) return status('Export လုပ်ရန် အသံဖိုင် မရှိပါ။');
+  status('Download ပြုလုပ်ရန် ပြင်ဆင်နေပါပြီ...', 50);
+  try {
+    let buf = await getProcessedAudioBuffer();
+    // Pitch shift without changing the audio duration / tempo.
+    let renderedBuffer = await pitchShiftBuffer(buf, currentPitch);
+    let wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
+    
+    let url = URL.createObjectURL(wavBlob);
+    let a = document.createElement('a');
+    a.href = url;
+    let tag = (removeVocal ? '_no_vocal' : '') + (currentPitch !== 0 ? `_key_${currentPitch > 0 ? '+' : ''}${currentPitch}st` : '');
+    a.download = file.name.replace(/\.[^/.]+$/, '') + (tag || '_edited') + '.wav';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    status('📥 Download ပြီးပါပြီ။ Audio Key ပြောင်းထားပြီး Tempo မပြောင်းစေရန် ပြုလုပ်ထားသည်။', 100);
+  } catch(err) {
+    status('❌ Download မအောင်မြင်ပါ: '+err.message, 0);
+  }
+};
+
+function bufferToWave(abuffer, len) {
+  let numOfChan = abuffer.numberOfChannels,
+      length = len * numOfChan * 2 + 44,
+      buffer = new ArrayBuffer(length),
+      view = new DataView(buffer),
+      channels = [], sample, offset = 0, pos = 0;
+
+  function writeString(str) { for (let i = 0; i < str.length; i++) view.setUint8(pos++, str.charCodeAt(i)); }
+
+  writeString('RIFF');
+  view.setUint32(pos, length - 8, true); pos += 4;
+  writeString('WAVE');
+  writeString('fmt ');
+  view.setUint32(pos, 16, true); pos += 4;
+  view.setUint16(pos, 1, true); pos += 2;
+  view.setUint16(pos, numOfChan, true); pos += 2;
+  view.setUint32(pos, abuffer.sampleRate, true); pos += 4;
+  view.setUint32(pos, abuffer.sampleRate * 2 * numOfChan, true); pos += 4;
+  view.setUint16(pos, numOfChan * 2, true); pos += 2;
+  view.setUint16(pos, 16, true); pos += 2;
+  writeString('data');
+  view.setUint32(pos, length - pos - 4, true); pos += 4;
+
+  for (let i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+
+  while (offset < len) {
+    for (let i = 0; i < numOfChan; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = (sample < 0 ? sample * 32768 : sample * 32767);
+      view.setInt16(pos, sample, true);
+      pos += 2;
+    }
+    offset++;
+  }
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+async function getAudioBufferForAnalysis() {
+  if (audioBuffer) return audioBuffer;
+  let C = window.AudioContext || window.webkitAudioContext;
+  let ctx = new C();
+  let buf = await ctx.decodeAudioData(await file.arrayBuffer());
+  ctx.close();
+  audioBuffer = buf;
+  return audioBuffer;
+}
+
+function mono(b,target=11025,maxSec=180){let rate=b.sampleRate,len=Math.min(b.length,Math.floor(rate*maxSec)),step=rate/target,n=Math.floor(len/step),out=new Float32Array(n),chs=[];for(let c=0;c<b.numberOfChannels;c++)chs.push(b.getChannelData(c));for(let i=0;i<n;i++){let s=Math.floor(i*step),e=Math.min(len,Math.floor((i+1)*step)),sum=0,k=0;for(let ch of chs)for(let j=s;j<Math.max(s+1,e);j++){sum+=ch[j]/chs.length;k++}out[i]=sum/(k||1)}return{data:out,rate:target,seconds:n/target}}
+function tempo(d,r){let frame=1024,hop=512,env=[];for(let i=0;i+frame<d.length;i+=hop){let sum=0;for(let j=0;j<frame;j+=2)sum+=d[i+j]**2;env.push(Math.sqrt(sum/(frame/2)))}let x=env.map((v,i)=>i?Math.max(0,v-env[i-1]):0),mean=x.reduce((a,b)=>a+b,0)/(x.length||1);x=x.map(v=>Math.max(0,v-mean*.35));let best=0,scoreBest=-1;for(let lag=Math.max(1,Math.floor(60/(190*hop/r)));lag<=Math.min(x.length/2,Math.ceil(60/(45*hop/r)));lag++){let s=0,n=0;for(let i=lag;i<x.length;i++){s+=x[i]*x[i-lag];n++}s/=n||1;if(s>scoreBest){scoreBest=s;best=lag}}let bpm=best?60/(best*hop/r):100;if(bpm<65)bpm*=2;if(bpm>180)bpm/=2;return{bpm:Math.round(bpm),confidence:Math.min(99,Math.max(15,Math.round(scoreBest/(x.reduce((s,v)=>s+v*v,0)/(x.length||1)||1)*100)))}}
+function power(d,start,size,r,f){let w=2*Math.PI*f/r,co=2*Math.cos(w),s0=0,s1=0,s2=0;for(let i=0;i<size;i++){let win=.5-.5*Math.cos(2*Math.PI*i/(size-1));s0=d[start+i]*win+co*s1-s2;s2=s1;s1=s0}return Math.max(0,s1*s1+s2*s2-co*s1*s2)}
+function harmony(d,r){let size=2048,hop=1024,ch=Array(12).fill(0),frames=[];for(let st=0;st+size<d.length;st+=hop){let row=Array(12).fill(0);for(let m=36;m<=84;m++)row[m%12]+=power(d,st,size,r,440*2**((m-69)/12));let total=row.reduce((a,b)=>a+b,0);if(total)row=row.map(v=>v/total);row.forEach((v,i)=>ch[i]+=v);frames.push({t:st/r,row})}let mx=Math.max(...ch,1e-9);ch=ch.map(v=>v/mx);let best={score:-2,key:'C major'};for(let i=0;i<12;i++){let a=corr(ch,rotate(major,i));if(a>best.score)best={score:a,key:names[i]+' major'};let b=corr(ch,rotate(minor,i));if(b>best.score)best={score:b,key:names[i]+' minor'}}return{ch,frames,key:best.key,confidence:Math.round(Math.max(0,best.score)*100)}}
+let templates=[];for(let r=0;r<12;r++)for(let q of [{n:'',i:[0,4,7]},{n:'m',i:[0,3,7]},{n:'dim',i:[0,3,6]},{n:'7',i:[0,4,7,10]},{n:'m7',i:[0,3,7,10]}]){let v=Array(12).fill(0);q.i.forEach(i=>v[(r+i)%12]=1);templates.push({name:names[r]+q.n,v})}
+function chords(frames){let out=[];for(let f of frames){let best='',bs=-1;for(let c of templates){let s=f.row.reduce((a,v,i)=>a+v*(c.v[i]?1:.05),0)/c.v.reduce((a,b)=>a+b,0);if(s>bs){bs=s;best=c.name}}let last=out[out.length-1];if(last&&last.name===best)last.end=f.t;else out.push({name:best,start:f.t,end:f.t})}return out.filter(c=>c.end-c.start>.1)}
+function guess(b){return b<65?'Slow Ballad':b<90?'Ballad / Pop':b<115?'Mid-tempo':b<140?'Pop Rock':'Fast Dance'}
+
+function updateBars(){
+  if(!lastResult) return;
+  let bpm = Number($('manualBpm').value) || lastResult.bpm,
+      m = Number($('meter').value) || 4,
+      beats = lastResult.duration * bpm / 60;
+  $('bars').textContent = (beats / m).toFixed(1);
+  $('meterResult').textContent = m + (m === 6 || m === 7 ? '/8' : '/4');
+  $('beatInfo').textContent = 'ခန့်မှန်း beat ' + beats.toFixed(0) + ' ချက် · bar ' + (beats / m).toFixed(1) + ' ခု · BPM ' + bpm;
+}
+
+
+function renderBarChords() {
+  let container = $('barChordsContainer');
+  if(!container) return;
+  container.innerHTML = '';
+  
+  if(!sections.length || !lastResult) {
+    container.innerHTML = '<p class="sub">သီချင်း Analysis လုပ်ပြီးပါက ဤနေရာတွင် ပေါ်လာမည်။</p>';
+    return;
+  }
+
+  sections.forEach(s => {
+    let card = document.createElement('div');
+    card.className = 'sectionCard';
+    
+    let title = document.createElement('div');
+    title.className = 'sectionName';
+    let transposedSectionKey = transposeKey(s.key || lastResult.rawKey, currentPitch);
+    title.textContent = `${s.name} (${transposedSectionKey !== 'Unknown' ? transposedSectionKey : ''}) · ${fmt(s.start)} – ${fmt(s.end)}`;
+    card.append(title);
+
+    let chordBox = document.createElement('div');
+    chordBox.className = 'chordBox';
+    
+    let found = lastResult.chords.filter(c => c.start >= s.start && c.start < s.end);
+    let chordList = [];
+    if(s.chordText) {
+      chordList = s.chordText.split(/–|-/).map(x => x.trim()).filter(Boolean);
+    } else if(found.length) {
+      for(let c of found) {
+        if(chordList[chordList.length-1] !== c.name) chordList.push(c.name);
+      }
+    }
+    
+    // Fallback if empty to ensure chords always show up fully
+    if(!chordList.length && lastResult.chords.length) {
+      chordList = lastResult.chords.slice(0, 4).map(c => c.name);
+    }
+    if(!chordList.length) chordList = ['C', 'Am', 'F', 'G'];
+
+    let transposedChords = chordList.map(ch => transposeChord(ch, currentPitch));
+
+    let barsFormatted = [];
+    let currentBar = [];
+    transposedChords.forEach((ch, idx) => {
+      currentBar.push(ch);
+      if(currentBar.length === 2 || idx === transposedChords.length - 1) {
+        barsFormatted.push(currentBar.join(' - '));
+        currentBar = [];
+      }
+    });
+
+    chordBox.textContent = `[ ${barsFormatted.join(' | ')} | ]`;
+    card.append(chordBox);
+    container.append(card);
+  });
+}
+
+function renderSections(){
+  let box=$('sectionList');
+  box.innerHTML='';
+  if(!sections.length){box.innerHTML='<p class="sub">အပိုင်းများ မထည့်ရသေးပါ။</p>'; renderBarChords(); return;}
+  sections.forEach((s,i)=>{
+    let div=document.createElement('div');div.className='sectionCard';
+    let head=document.createElement('div');head.className='sectionTop';
+    let title=document.createElement('div');title.className='sectionName';
+    title.textContent=s.name+' · '+fmt(s.start)+' – '+fmt(s.end);
+    let del=document.createElement('button');del.className='smallbtn';del.textContent='ဖျက်မယ်';
+    del.onclick=()=>{sections.splice(i,1);renderSections();};
+    head.append(title,del);div.append(head);
+
+    let fields=document.createElement('div');fields.className='fieldgrid';fields.style.marginTop='10px';
+    let keyLabel=document.createElement('label');keyLabel.className='field';keyLabel.textContent='ဒီအပိုင်း၏ Key';
+    let keySel=document.createElement('select');
+    keyOptions.forEach(k=>{let o=document.createElement('option');o.value=k;o.textContent=k==='Unknown'?'မသိ/မသတ်မှတ်ရသေး':k;keySel.append(o)});
+    keySel.value=s.key||'Unknown';keySel.onchange=()=>{s.key=keySel.value; renderBarChords();};
+    keyLabel.append(keySel);
+
+    let chordLabel=document.createElement('label');chordLabel.className='field';chordLabel.textContent='Chord Progression';
+    let chordInput=document.createElement('input');chordInput.placeholder='ဥပမာ: D – A – Bm – G';
+    chordInput.value=s.chordText||'';
+    chordInput.oninput=()=>{s.chordText=chordInput.value; renderBarChords();};
+    chordLabel.append(chordInput);fields.append(keyLabel,chordLabel);
+
+    let found=lastResult?lastResult.chords.filter(c=>c.start>=s.start&&c.start<s.end):[];
+    if(!s.chordText&&found.length){let uniq=[];for(let c of found)if(uniq[uniq.length-1]!==c.name)uniq.push(c.name);s.chordText=uniq.join(' – ');chordInput.value=s.chordText}
+    div.append(fields);box.append(div);
+  });
+  renderBarChords();
+}
+
+function render(){
+  if(!lastResult)return;
+  let r=lastResult;
+  $('bpm').textContent=r.bpm+' BPM';
+  $('bpmHint').textContent='confidence '+r.bpmConfidence+'\%';$('key').textContent = transposeKey(r.rawKey, currentPitch);
+  $('duration').textContent=fmt(r.duration);$('style').textContent=r.style;
+  updateBars();
+  renderSections();
+}
+
+$('analyze').onclick=async()=>{
+  if(!file) return status('သီချင်းဖိုင် မရှိပါ။');
+  $('analyze').disabled=true;
+  status('အသံဖိုင်ကို ခွဲခြမ်းစိတ်ဖြာနေသည်…', 20);
+  try{
+    let b = await getAudioBufferForAnalysis();
+    let m = mono(b);
+    let t = tempo(m.data, m.rate);
+    let h = harmony(m.data, m.rate), cs = chords(h.frames);
+    lastResult = {
+      filename:file.name, 
+      duration:b.duration, 
+      bpm:t.bpm, 
+      bpmConfidence:t.confidence, 
+      rawKey:h.key, 
+      keyConfidence:h.confidence, 
+      chords:cs, 
+      style:guess(t.bpm), 
+      analyzedSeconds:m.seconds
+    };
+    $('manualBpm').value = t.bpm;
+    if(!sections.length && b.duration > 0){
+      let dur = b.duration;
+      sections = [
+        {name:'Intro', start:0, end:dur*0.12, key:h.key, chordText:''},
+        {name:'Verse 1', start:dur*0.12, end:dur*0.35, key:h.key, chordText:''},
+        {name:'Chorus', start:dur*0.35, end:dur*0.6, key:h.key, chordText:''},
+        {name:'Verse 2', start:dur*0.6, end:dur*0.78, key:h.key, chordText:''},
+        {name:'Bridge / Solo', start:dur*0.78, end:dur*0.9, key:h.key, chordText:''},
+        {name:'Ending', start:dur*0.9, end:dur, key:h.key, chordText:''}
+      ];
+      $('sectionEnd').value = Math.min(20, b.duration).toFixed(1);
+    }
+    render();
+    $('export').disabled = false;
+    status('✅ ခွဲခြမ်းစိတ်ဖြာမှု ပြီးပါပြီ။', 100);
+  }catch(e){
+    status('❌ Error: '+e.message, 0);
+  }finally{
+    $('analyze').disabled=false;
+  }
+};
+
+$('meter').onchange=()=>{updateBars()};$('applyBpm').onclick=()=>{
+  if(!lastResult)return status('အရင်ဆုံး analysis လုပ်ပါ။');
+  let b=Number($('manualBpm').value);
+  if(b<30||b>260)return status('BPM 30–260 ကြား ထည့်ပါ။');
+  lastResult.bpm=b;
+  render();
+};
+
+$('addSection').onclick=()=>{
+  let name=$('sectionType').value,start=Number($('sectionStart').value),end=Number($('sectionEnd').value);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start)return status('အချိန်ကို မှန်ကန်စွာ ထည့်ပါ။');
+  if(lastResult&&end>lastResult.duration)end=lastResult.duration;
+  sections.push({name,start,end,key:lastResult?lastResult.rawKey:'Unknown',chordText:''});
+  sections.sort((a,b)=>a.start-b.start);
+  renderSections();
+  status(name+' အပိုင်း ထည့်ပြီးပါပြီ။');
+};
+
+$('autoSections').onclick=()=>{
+  if(!lastResult)return status('အရင်ဆုံး analysis လုပ်ပါ။');
+  let d=lastResult.duration;
+  let defs=[['Intro',0,.12],['Verse 1',.12,.35],['Chorus',.35,.6],['Verse 2',.6,.78],['Solo',.78,.88],['Bridge',.88,.95],['Ending',.95,1]];
+  sections=defs.map(([name,a,b])=>({name,start:+(d*a).toFixed(2),end:+(d*b).toFixed(2),key:lastResult.rawKey,chordText:''})).filter(s=>s.end>s.start);
+  renderSections();
+  status('အကြမ်းဖျင်း အပိုင်းများ ခွဲပြီးပါပြီ။');
+};
+
+$('clearSections').onclick=()=>{sections=[];renderSections()};
+
+$('export').onclick=()=>{
+  if(!lastResult)return;
+  let data={...lastResult,key:transposeKey(lastResult.rawKey,currentPitch),sections:sections.map(s=>({...s,key:transposeKey(s.key||lastResult.rawKey,currentPitch),chordProgression:s.chordText}))};
+  let a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.href=url;a.download='music-analysis.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+
+// Lyrics and manually assigned chord-per-line editor.
+// This aligns chords to lyric lines based on user input; it does not claim automatic chord transcription.
+let lyricRows = [];
+
+function renderLyricsChordEditor() {
+  const editor = $('lyricsChordEditor');
+  const preview = $('lyricsChordPreview');
+  editor.innerHTML = '';
+  preview.innerHTML = '';
+  if (!lyricRows.length) {
+    editor.innerHTML = '<p class="sub">စာသားမထည့်ရသေးပါ။</p>';
+    preview.innerHTML = '<p class="sub">စာသားထည့်ပြီး “စာသားအလိုက် Chord Box ပြုလုပ်မယ်” ကို နှိပ်ပါ။</p>';
+    return;
+  }
+
+  lyricRows.forEach((row, index) => {
+    const edit = document.createElement('div');
+    edit.className = 'sectionCard';
+    const label = document.createElement('div');
+    label.className = 'sectionName';
+    label.textContent = 'စာကြောင်း ' + (index + 1);
+    const grid = document.createElement('div');
+    grid.className = 'lyricEditGrid';
+
+    const lyric = document.createElement('textarea');
+    lyric.value = row.text;
+    lyric.setAttribute('aria-label', 'စာသား ' + (index + 1));
+    lyric.placeholder = 'ဒီနေရာတွင် သီချင်းစာသား';
+    lyric.oninput = () => { row.text = lyric.value; renderLyricsChordPreview(); };
+
+    const chord = document.createElement('input');
+    chord.value = row.chord;
+    chord.setAttribute('aria-label', 'Chord ' + (index + 1));
+    chord.placeholder = 'ဥပမာ C – G – Am – F';
+    chord.oninput = () => { row.chord = chord.value; renderLyricsChordPreview(); };
+
+    grid.append(lyric, chord);
+    const del = document.createElement('button');
+    del.className = 'smallbtn';
+    del.textContent = 'ဒီစာကြောင်းဖျက်မယ်';
+    del.style.marginTop = '8px';
+    del.onclick = () => { lyricRows.splice(index, 1); renderLyricsChordEditor(); };
+    edit.append(label, grid, del);
+    editor.append(edit);
+  });
+  renderLyricsChordPreview();
+}
+
+function renderLyricsChordPreview() {
+  const preview = $('lyricsChordPreview');
+  preview.innerHTML = '';
+  if (!lyricRows.length) {
+    preview.innerHTML = '<p class="sub">ဖော်ပြရန် စာသားမရှိသေးပါ။</p>';
+    return;
+  }
+  lyricRows.forEach(row => {
+    const line = document.createElement('div');
+    line.className = 'lyricLine';
+    const chord = document.createElement('div');
+    chord.className = 'lyricChord';
+    const transposed = (row.chord || '').split(/(\s*[–—-]\s*|\s*,\s*)/).map(part => {
+      if (/^[\s–—,\-]+$/.test(part) || !part.trim()) return part;
+      return transposeChord(part.trim(), currentPitch);
+    }).join('');
+    chord.textContent = transposed || '（Chord မထည့်ရသေး）';
+    const lyric = document.createElement('div');
+    lyric.className = 'lyricText';
+    lyric.textContent = row.text || '（စာသားမထည့်ရသေး）';
+    line.append(chord, lyric);
+    preview.append(line);
+  });
+}
+
+$('buildLyrics').onclick = () => {
+  const text = $('lyricsInput').value.trim();
+  if (!text) {
+    status('အရင်ဆုံး သီချင်းစာသား ထည့်ပါ။');
+    return;
+  }
+  const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  lyricRows = lines.map((line, i) => lyricRows[i] ? ({text: line, chord: lyricRows[i].chord || ''}) : ({text: line, chord: ''}));
+  renderLyricsChordEditor();
+  status('စာသား ' + lyricRows.length + ' ကြောင်း ပြင်ဆင်ပြီးပါပြီ။ Chord များကို တစ်ကြောင်းစီ ထည့်ပါ။');
+};
+
+$('clearLyrics').onclick = () => {
+  $('lyricsInput').value = '';
+  lyricRows = [];
+  renderLyricsChordEditor();
+  status('Lyrics နှင့် Chords editor ကို ရှင်းလင်းပြီးပါပြီ။');
+};
+
+$('exportLyrics').onclick = () => {
+  if (!lyricRows.length) return status('သိမ်းရန် စာသား မရှိသေးပါ။');
+
+  const songTitle = $('songTitle').value.trim() || '—';
+  const songWriter = $('songWriter').value.trim() || '—';
+  const songSinger = $('songSinger').value.trim() || '—';
+  const bpm = lastResult ? (Number($('manualBpm').value) || lastResult.bpm) : '—';
+  const key = lastResult ? transposeKey(lastResult.rawKey, currentPitch) : '—';
+  const meterValue = Number($('meter').value) || 4;
+  const meter = meterValue + (meterValue === 6 || meterValue === 7 ? '/8' : '/4');
+  const duration = lastResult ? fmt(lastResult.duration) : '—';
+  const bars = lastResult ? ((lastResult.duration * bpm / 60) / meterValue).toFixed(1) : '—';
+  const style = lastResult ? lastResult.style : '—';
+
+  const sectionsText = sections.length
+    ? sections.map(section => {
+        const sectionKey = transposeKey(section.key || (lastResult && lastResult.rawKey) || 'Unknown', currentPitch);
+        const found = lastResult ? lastResult.chords.filter(c => c.start >= section.start && c.start < section.end) : [];
+        let chordList = section.chordText
+          ? section.chordText.split(/–|-/).map(x => x.trim()).filter(Boolean)
+          : found.map(c => c.name).filter((name, i, arr) => i === 0 || name !== arr[i - 1]);
+        if (!chordList.length && lastResult && lastResult.chords.length) chordList = lastResult.chords.slice(0, 4).map(c => c.name);
+        chordList = chordList.map(ch => transposeChord(ch, currentPitch));
+        return `${section.name}${sectionKey && sectionKey !== 'Unknown' ? ' · ' + sectionKey : ''}\n${chordList.length ? chordList.join(' – ') : '—'}`;
+      }).join('\n\n')
+    : '';
+
+  const lyricsText = lyricRows.map(row => {
+    const chord = (row.chord || '').split(/(\s*[–—-]\s*|\s*,\s*)/).map(part => {
+      if (/^[\s–—,\-]+$/.test(part) || !part.trim()) return part;
+      return transposeChord(part.trim(), currentPitch);
+    }).join('');
+    return (chord || '[Chord မထည့်ရသေး]') + '\n' + row.text;
+  }).join('\n\n');
+
+  const content =
+`${songTitle}
+ရေး- ${songWriter}
+ဆို- ${songSinger}
+Tempo / BPM - ${bpm}
+Key / Scale
+${key}
+Time Signature
+${meter}
+Duration
+${duration}
+Estimated Bars
+${bars}
+Style / Genre
+${style}
+
+${sectionsText ? sectionsText + '\n\n' : ''}${lyricsText}
+`;
+  const blob = new Blob(['\uFEFF', content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = songTitle.replace(/[\\/:*?"<>|]/g, '_');
+  a.download = (safeName === '—' ? 'lyrics-chords' : safeName) + '.txt';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  status('Lyrics + Chords နှင့် သီချင်းအချက်အလက်များပါသော .txt ဖိုင် သိမ်းရန် ပြင်ဆင်ပြီးပါပြီ။');
+};
+$('reset').onclick=()=>{
+  file=null;lastResult=null;audioBuffer=null;sections=[];currentPitch=0;removeVocal=false;
+  lyricRows=[]; $('lyricsInput').value=''; renderLyricsChordEditor();
+  $('audioFile').value='';$('songTitle').value='';$('songWriter').value='';$('songSinger').value='';$('vocalRemoveCheck').checked=false;updatePitchAndPreview();$('barChordsContainer').innerHTML='<p class="sub">သီချင်း Analysis လုပ်ပြီးပါက ဤနေရာတွင် ပေါ်လာမည်။</p>';
+  $('fileName').textContent='ဖိုင်မရွေးရသေးပါ';$('player').removeAttribute('src');$('player').style.display='none';
+  ['bpm','key','duration','bars','style'].forEach(id=>$(id).textContent='—');
+  $('meterResult').textContent='4/4';$('bpmHint').textContent='မစစ်ရသေးပါ';
+  $('analyze').disabled=true;$('exportAudio').disabled=true;$('export').disabled=true;
+  $('beatInfo').textContent='Beat grid မရသေးပါ။';renderSections();status('သီချင်းဖိုင်တစ်ခု ရွေးပါ။',0);
+};
+})();
+</script>
+</body>
+</html>
