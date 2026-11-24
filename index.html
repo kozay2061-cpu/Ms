@@ -171,8 +171,21 @@ main{max-width:980px;margin:auto;padding:0 12px 36px;display:grid;gap:13px}.card
 <section class="card wide">
   <h2>☁️ Online AI Backend</h2>
   <p class="lyricsHelp">Cloudflare Workers AI ကို Backend မှတစ်ဆင့် အသုံးပြုပြီး အသံမှ Lyrics ထုတ်ခြင်းနှင့် Lyrics အတွက် Chord အကြံပြုခြင်းကို လုပ်ဆောင်နိုင်ပါသည်။ API Key ကို Website ထဲ မထည့်ပါနှင့်။</p>
-  <label class="field">Cloudflare Worker URL<input id="apiBaseUrl" type="url" value="https://fragrant-pine-ba2d.sback0065.workers.dev" placeholder="https://your-worker.workers.dev"></label>
+    <label class="field">Cloudflare Worker URL
+    <input id="apiBaseUrl" type="url" value="https://fragrant-pine-ba2d.sback0065.workers.dev" placeholder="https://your-worker.workers.dev">
+  </label>
+  <label class="field" style="margin-top:10px">Python Chord & Vocal AI URL (Colab / ngrok)
+    <input id="pyBackendUrl" type="url" value="https://envious-coastland-kerosene.ngrok-free.dev" placeholder="https://xxxx.ngrok-free.dev">
+  </label>
   <div class="controls">
+    <button id="testPyBackend">Python Backend စမ်းမယ်</button>
+    <button id="testOnlineAI" class="primary">Backend ချိတ်ဆက်မှု စမ်းမယ်</button>
+    <button id="transcribeAI">အသံမှ Lyrics ထုတ်မယ် (AI)</button>
+    <button id="suggestChordsAI">Lyrics အတွက် Chords ခန့်မှန်းမယ် (AI)</button>
+    <button id="analyzeSongAI" class="primary" disabled>🎧 Full Song + Bar/Beat AI သုံးသပ်မယ်</button>
+  </div>
+
+ <div class="controls">
     <button id="testOnlineAI" class="primary">Backend ချိတ်ဆက်မှု စမ်းမယ်</button>
     <button id="transcribeAI">အသံမှ Lyrics ထုတ်မယ် (AI)</button>
     <button id="suggestChordsAI">Lyrics အတွက် Chords ခန့်မှန်းမယ် (AI)</button>
@@ -1057,51 +1070,89 @@ function render(){
   renderChordTimeline();
 }
 
-$('analyze').onclick=async()=>{
-  if(!file) return status('သီချင်းဖိုင် မရှိပါ။');
-  $('analyze').disabled=true;
+$('analyze').onclick = async () => {
+  if (!file) return status('သီချင်းဖိုင် မရှိပါ။');
+  $('analyze').disabled = true;
   status('အသံဖိုင်ကို ခွဲခြမ်းစိတ်ဖြာနေသည်…', 20);
-  try{
+  try {
     let b = await getAudioBufferForAnalysis();
     drawWaveform();
     let m = mono(b);
     let t = tempo(m.data, m.rate);
-    let h = harmony(m.data, m.rate), rawChords = chords(h.frames, 1024, m.rate);
-    rawChordSegments = rawChords;
-    let cs = rawChordSegments.map(ch => ({...ch}));
-    lastResult = {
-      filename:file.name, 
-      duration:b.duration, 
-      bpm:t.bpm, 
-      bpmConfidence:t.confidence, 
-      rawKey:h.key, 
-      keyConfidence:h.confidence, 
-      chords:cs, 
-      style:guess(t.bpm), 
-      analyzedSeconds:m.seconds
-    };
-    $('manualBpm').value = t.bpm;
-    $('beatOffset').value = Number(t.offset || 0).toFixed(2);
-    if(!sections.length && b.duration > 0){
-      let dur = b.duration;
-      sections = [
-        {name:'Intro', start:0, end:dur*0.12, key:h.key, chordText:''},
-        {name:'Verse 1', start:dur*0.12, end:dur*0.35, key:h.key, chordText:''},
-        {name:'Chorus', start:dur*0.35, end:dur*0.6, key:h.key, chordText:''},
-        {name:'Verse 2', start:dur*0.6, end:dur*0.78, key:h.key, chordText:''},
-        {name:'Bridge / Solo', start:dur*0.78, end:dur*0.9, key:h.key, chordText:''},
-        {name:'Ending', start:dur*0.9, end:dur, key:h.key, chordText:''}
-      ];
-      $('sectionEnd').value = Math.min(20, b.duration).toFixed(1);
+    let h = harmony(m.data, m.rate);
+
+    let pyData = null;
+    if (getPyBackendUrl()) {
+      status('Python + Demucs AI ဖြင့် အဆိုသံဖယ်ပြီး Chords ရှာနေသည် (စက္ကန့် ၁၅-၃၀ ခန့် ကြာနိုင်သည်)…', 45);
+      try {
+        const meterVal = Number($('meter').value) || 4;
+        const manualBpmVal = Number($('manualBpm').value) || 0;
+        pyData = await analyzeWithPythonBackend(file, manualBpmVal, meterVal);
+      } catch (err) {
+        console.warn('Python fallback to browser:', err);
+        status('Python Backend မရသဖြင့် Browser analysis ဖြင့် ဆက်လုပ်နေသည်…', 50);
+      }
     }
+
+    if (pyData) {
+      rawChordSegments = pyData.chords;
+      lastResult = {
+        filename: file.name,
+        duration: pyData.duration || b.duration,
+        bpm: pyData.bpm || t.bpm,
+        bpmConfidence: 92,
+        rawKey: pyData.key || h.key,
+        keyConfidence: h.confidence,
+        chords: rawChordSegments.map(ch => ({ ...ch })),
+        style: guess(pyData.bpm || t.bpm),
+        analyzedSeconds: m.seconds
+      };
+      $('beatOffset').value = Number(pyData.beatOffset ?? t.offset ?? 0).toFixed(2);
+    } else {
+      rawChordSegments = chords(h.frames, 1024, m.rate);
+      lastResult = {
+        filename: file.name,
+        duration: b.duration,
+        bpm: t.bpm,
+        bpmConfidence: t.confidence,
+        rawKey: h.key,
+        keyConfidence: h.confidence,
+        chords: rawChordSegments.map(ch => ({ ...ch })),
+        style: guess(t.bpm),
+        analyzedSeconds: m.seconds
+      };
+      $('beatOffset').value = Number(t.offset || 0).toFixed(2);
+    }
+
+    $('manualBpm').value = lastResult.bpm;
+
+    if (!sections.length && b.duration > 0) {
+      let dur = lastResult.duration;
+      sections = [
+        { name: 'Intro', start: 0, end: dur * 0.12, key: lastResult.rawKey, chordText: '' },
+        { name: 'Verse 1', start: dur * 0.12, end: dur * 0.35, key: lastResult.rawKey, chordText: '' },
+        { name: 'Chorus', start: dur * 0.35, end: dur * 0.6, key: lastResult.rawKey, chordText: '' },
+        { name: 'Verse 2', start: dur * 0.6, end: dur * 0.78, key: lastResult.rawKey, chordText: '' },
+        { name: 'Bridge / Solo', start: dur * 0.78, end: dur * 0.9, key: lastResult.rawKey, chordText: '' },
+        { name: 'Ending', start: dur * 0.9, end: dur, key: lastResult.rawKey, chordText: '' }
+      ];
+      $('sectionEnd').value = Math.min(20, dur).toFixed(1);
+    }
+
     render();
     $('analyzeSongAI').disabled = false;
     $('export').disabled = false;
-    renderChordTimeline(); status('✅ Browser analysis ပြီးပါပြီ။ BPM နှင့် Beat Offset ကို အသံ onset မှ ခန့်မှန်းထားသည်။ Chord များကို Beat အလိုက် စုစည်းပြီး တည်ငြိမ်အောင် ပြုလုပ်ထားသည်။', 100);
-  }catch(e){
-    status('❌ Error: '+e.message, 0);
-  }finally{
-    $('analyze').disabled=false;
+    renderChordTimeline();
+    status(
+      pyData
+        ? '✅ Python + Demucs AI ဖြင့် Chords နှင့် Beat ခွဲခြမ်းစိတ်ဖြာမှု ပြီးပါပြီ။'
+        : '✅ Browser analysis ပြီးပါပြီ။',
+      100
+    );
+  } catch (e) {
+    status('❌ Error: ' + e.message, 0);
+  } finally {
+    $('analyze').disabled = false;
   }
 };
 
@@ -1398,6 +1449,60 @@ $('reset').onclick=()=>{
   $('analyze').disabled=true;$('exportAudio').disabled=true;$('export').disabled=true;
   $('beatInfo').textContent='Beat grid မရသေးပါ။';renderSections();renderChordTimeline();status('သီချင်းဖိုင်တစ်ခု ရွေးပါ။',0);
 };
+const pyUrlInput = $('pyBackendUrl');
+if (pyUrlInput) {
+  const savedPyUrl = localStorage.getItem('aiMusicStudio_pyUrl');
+  if (savedPyUrl) pyUrlInput.value = savedPyUrl;
+  pyUrlInput.addEventListener('input', () => {
+    localStorage.setItem('aiMusicStudio_pyUrl', pyUrlInput.value.trim());
+  });
+}
+
+function getPyBackendUrl() {
+  return ($('pyBackendUrl')?.value || '').trim().replace(/^https:\/\//i, 'https://').replace(/\/+$/, '');
+}
+
+if ($('testPyBackend')) {
+  $('testPyBackend').onclick = async () => {
+    const box = $('onlineAIStatus');
+    const url = getPyBackendUrl();
+    if (!url) { box.textContent = 'Python Backend URL ထည့်ပါ။'; return; }
+    box.textContent = 'Python (Demucs) Backend စစ်ဆေးနေသည်…';
+    try {
+      const r = await fetch(url + '/health', {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
+      const d = await r.json();
+      box.textContent = d.ok
+        ? '✅ Python Backend ချိတ်ဆက်မှု အောင်မြင်ပါပြီ (' + (d.engine || 'Demucs') + ')'
+        : '❌ Backend response မမှန်ပါ။';
+    } catch (e) {
+      box.textContent = '❌ Python Backend မရပါ: ' + e.message;
+    }
+  };
+}
+
+async function analyzeWithPythonBackend(audioFile, bpmVal, meterVal) {
+  const url = getPyBackendUrl();
+  if (!url) return null;
+
+  const formData = new FormData();
+  formData.append('file', audioFile);
+  if (bpmVal) formData.append('bpm_override', String(bpmVal));
+  formData.append('meter', String(meterVal || 4));
+
+  const res = await fetch(url + '/analyze-chords', {
+    method: 'POST',
+    headers: { 'ngrok-skip-browser-warning': 'true' },
+    body: formData
+  });
+  if (!res.ok) throw new Error('Python HTTP ' + res.status);
+  const data = await res.json();
+  if (!data || !data.ok || !Array.isArray(data.chords)) {
+    throw new Error('Python response format မမှန်ပါ။');
+  }
+  return data;
+}
 })();
 </script>
 </body>
